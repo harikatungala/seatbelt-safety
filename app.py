@@ -1,48 +1,88 @@
-pip install > requirements.txt
-gunicorn app:app
-import tkinter as tk
 
-# Function to toggle seatbelt status
-def toggle_seatbelt():
-    global seatbelt_worn
-    seatbelt_worn = not seatbelt_worn  # Toggle the status
-    update_status()
+from flask import Flask, render_template_string, redirect, url_for, request
 
-# Function to update the seatbelt status on the screen
-def update_status():
-    if seatbelt_worn:
-        status_label.config(text="✅ Seatbelt Detected. Safe to drive!", fg="green")
-        status_label.config(font=('Arial', 18, 'bold'))  # Set bold font when safe
-    else:
-        status_label.config(text="❗ No Seatbelt Detected! Please wear it.", fg="red")
-        status_label.config(font=('Arial', 20, 'bold'))  # Make font bigger for warning
+app = Flask(_name_)
 
-# Function to display the college name on the app window
-
-
-# Create the main window
-root = tk.Tk()
-root.title("Seatbelt Detector")
-root.geometry("500x350")  # Set the window size
-
-# Initialize seatbelt status (True means seatbelt is worn, False means not worn)
+# Initialize seatbelt status
 seatbelt_worn = True
 
+# HTML template
+html_template = '''
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Seatbelt Detector</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; margin-top: 50px; }
+        h1 { font-size: 36px; }
+        p { font-size: 24px; }
+        .safe { color: green; font-weight: bold; }
+        .warning { color: red; font-weight: bold; }
+        .buttons { margin-top: 30px; }
+        button { font-size: 18px; padding: 10px 20px; margin: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Seatbelt Detector</h1>
+    <p class="{{ status_class }}">{{ status_message }}</p>
+    
+    <div class="buttons">
+        <form action="/toggle" method="post" style="display:inline;">
+            <button type="submit">Toggle Status</button>
+        </form>
+        <form action="/force_safe" method="post" style="display:inline;">
+            <button type="submit">Force Safe</button>
+        </form>
+        <form action="/force_warning" method="post" style="display:inline;">
+            <button type="submit">Force Warning</button>
+        </form>
+        <form action="/reset" method="post" style="display:inline;">
+            <button type="submit">Reset</button>
+        </form>
+    </div>
+</body>
+</html>
+'''
 
+@app.route('/')
+def home():
+    global seatbelt_worn
+    if seatbelt_worn:
+        status_message = "✅ Seatbelt Detected. Safe to drive!"
+        status_class = "safe"
+    else:
+        status_message = "❗ No Seatbelt Detected! Please wear it."
+        status_class = "warning"
+    return render_template_string(html_template, status_message=status_message, status_class=status_class)
 
-# Heading for the app
-heading_label = tk.Label(root, text="Seatbelt Detector", font=('Arial', 20, 'bold'))
-heading_label.pack(pady=10)
+# Toggle seatbelt status
+@app.route('/toggle', methods=['POST'])
+def toggle():
+    global seatbelt_worn
+    seatbelt_worn = not seatbelt_worn
+    return redirect(url_for('home'))
 
-# Status label to show seatbelt status
-status_label = tk.Label(root, text="Checking Seatbelt...", font=('Arial', 18))
-status_label.pack(pady=20)
+# Force safe (seatbelt worn)
+@app.route('/force_safe', methods=['POST'])
+def force_safe():
+    global seatbelt_worn
+    seatbelt_worn = True
+    return redirect(url_for('home'))
 
-# Button to simulate seatbelt detection
-detect_button = tk.Button(root, text="Simulate Seatbelt Detection", font=('Arial', 14), command=toggle_seatbelt)
-detect_button.pack(pady=20)
+# Force warning (seatbelt not worn)
+@app.route('/force_warning', methods=['POST'])
+def force_warning():
+    global seatbelt_worn
+    seatbelt_worn = False
+    return redirect(url_for('home'))
 
-
+# Reset (set to default - seatbelt worn)
+@app.route('/reset', methods=['POST'])
+def reset():
+    global seatbelt_worn
+    seatbelt_worn = True
+    return redirect(url_for('home'))
 
 # Run the app
-root.mainloop()
+if _name_ == '_main_':
+    app.run(host='0.0.0.0', port=8000)
