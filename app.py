@@ -1,3 +1,4 @@
+pip freeze > requirements.txt
 import tkinter as tk
 
 # Function to toggle seatbelt status
