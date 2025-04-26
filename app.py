@@ -1,4 +1,4 @@
-pip install -r requirements.txt
+pip install > requirements.txt
 gunicorn app:app
 import tkinter as tk
 
