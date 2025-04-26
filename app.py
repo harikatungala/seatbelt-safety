@@ -1,4 +1,5 @@
-
+pip install -r requirements.txt
+gunicorn app:app
 import tkinter as tk
 
 # Function to toggle seatbelt status
